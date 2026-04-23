@@ -2,53 +2,143 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>택배 조회</title>
+  <title>대한통운 조회 도구</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      line-height: 1.5;
+    }
+    h2 {
+      margin-bottom: 10px;
+    }
+    textarea {
+      width: 100%;
+      max-width: 700px;
+      height: 220px;
+      padding: 10px;
+      font-size: 14px;
+    }
+    button {
+      margin-top: 10px;
+      padding: 10px 16px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    table {
+      border-collapse: collapse;
+      margin-top: 20px;
+      width: 100%;
+      max-width: 900px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: left;
+      font-size: 14px;
+    }
+    th {
+      background-color: #f5f5f5;
+    }
+    a {
+      color: #0066cc;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .desc {
+      color: #666;
+      margin-bottom: 12px;
+      font-size: 14px;
+    }
+  </style>
 </head>
 <body>
-  <h2>택배 조회</h2>
+  <h2>대한통운 조회 도구</h2>
+  <div class="desc">
+    엑셀에서 <b>택배사 + 운송장번호</b>를 복사해서 붙여넣으세요.<br>
+    예: <b>대한통운    697606241661</b> 또는 <b>대한통운,697606241661</b>
+  </div>
 
-  <textarea id="input" rows="10" cols="40"
-  placeholder="대한통운,697606039383
-대한통운 697606241635"></textarea><br><br>
+  <textarea id="input" placeholder="대한통운	697606241661
+대한통운	697606039383"></textarea><br>
+  <button onclick="track()">조회 링크 만들기</button>
 
-  <button onclick="track()">조회</button>
+  <div id="result"></div>
 
-  <pre id="result"></pre>
+  <script>
+    function track() {
+      const input = document.getElementById("input").value.trim();
+      const resultDiv = document.getElementById("result");
 
-<script>
-function getStatus(no) {
-  const last = no.slice(-1);
+      if (!input) {
+        resultDiv.innerHTML = "<p>입력값이 없습니다.</p>";
+        return;
+      }
 
-  if (last < 3) return "배송중(출하지출발)";
-  if (last < 5) return "배송중(간선상차)";
-  if (last < 7) return "배송중(간선하차)";
-  if (last < 9) return "배송중(배송출발)";
-  return "배송완료";
-}
+      const lines = input.split("\n");
+      let rows = "";
 
-function track() {
-  const input = document.getElementById("input").value.trim();
-  const lines = input.split("\n");
-  let result = "";
+      lines.forEach(line => {
+        if (!line.trim()) return;
 
-  lines.forEach(line => {
-    if (!line.trim()) return;
+        // 쉼표, 탭, 공백 전부 허용
+        const parts = line.trim().split(/[,\t\s]+/);
 
-    // 👉 쉼표 / 공백 / 탭 전부 처리
-    const parts = line.trim().split(/[,\s]+/);
+        let carrier = "";
+        let invoiceNo = "";
 
-    const carrier = parts[0];
-    const no = parts[1];
+        if (parts.length >= 2) {
+          carrier = parts[0].trim();
+          invoiceNo = parts[1].trim();
+        }
 
-    if (!carrier || !no) return;
+        if (!invoiceNo) return;
 
-    const status = getStatus(no.trim());
+        // 대한통운 여부만 가볍게 체크
+        const isCJ =
+          carrier.includes("대한통운") ||
+          carrier.toUpperCase().includes("CJ");
 
-    result += `${carrier} / ${no} / ${status}\n`;
-  });
+        const trackingUrl = "https://www.cjlogistics.com/ko/tool/parcel/tracking";
 
-  document.getElementById("result").textContent = result;
-}
-</script>
+        rows += `
+          <tr>
+            <td>${carrier || "대한통운"}</td>
+            <td>${invoiceNo}</td>
+            <td>${isCJ ? "대한통운 조회" : "택배사 확인 필요"}</td>
+            <td>
+              <a href="${trackingUrl}" target="_blank" rel="noopener noreferrer">
+                CJ 조회하기
+              </a>
+            </td>
+          </tr>
+        `;
+      });
+
+      if (!rows) {
+        resultDiv.innerHTML = "<p>조회할 데이터가 없습니다.</p>";
+        return;
+      }
+
+      resultDiv.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>택배사</th>
+              <th>운송장번호</th>
+              <th>상태</th>
+              <th>링크</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+          </tbody>
+        </table>
+      `;
+    }
+  </script>
 </body>
 </html>
