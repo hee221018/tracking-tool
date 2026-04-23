@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>택배 조회</title>
+</head>
+<body>
+  <h2>택배 조회</h2>
+  <textarea id="input" rows="10" cols="40"
+  placeholder="CJ,123456789012\n한진,987654321000"></textarea><br><br>
+  <button onclick="track()">조회</button>
+
+  <pre id="result"></pre>
+
+<script>
+function getStatus(no) {
+  const last = no.slice(-1);
+  if (last < 3) return "배송중(출하지출발)";
+  if (last < 5) return "배송중(간선상차)";
+  if (last < 7) return "배송중(간선하차)";
+  if (last < 9) return "배송중(배송출발)";
+  return "배송완료";
+}
+
+function track() {
+  const input = document.getElementById("input").value.trim();
+  const lines = input.split("\\n");
+  let result = "";
+
+  lines.forEach(line => {
+    if (!line) return;
+    const [carrier, no] = line.split(",");
+    const status = getStatus(no.trim());
+    result += `${carrier} / ${no} / ${status}\n`;
+  });
+
+  document.getElementById("result").textContent = result;
+}
+</script>
+</body>
+</html>
