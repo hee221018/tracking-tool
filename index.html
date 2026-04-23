@@ -6,8 +6,11 @@
 </head>
 <body>
   <h2>택배 조회</h2>
+
   <textarea id="input" rows="10" cols="40"
-  placeholder="CJ,123456789012\n한진,987654321000"></textarea><br><br>
+  placeholder="대한통운,697606039383
+대한통운 697606241635"></textarea><br><br>
+
   <button onclick="track()">조회</button>
 
   <pre id="result"></pre>
@@ -15,6 +18,7 @@
 <script>
 function getStatus(no) {
   const last = no.slice(-1);
+
   if (last < 3) return "배송중(출하지출발)";
   if (last < 5) return "배송중(간선상차)";
   if (last < 7) return "배송중(간선하차)";
@@ -24,13 +28,22 @@ function getStatus(no) {
 
 function track() {
   const input = document.getElementById("input").value.trim();
-  const lines = input.split("\\n");
+  const lines = input.split("\n");
   let result = "";
 
   lines.forEach(line => {
-    if (!line) return;
-    const [carrier, no] = line.split(",");
+    if (!line.trim()) return;
+
+    // 👉 쉼표 / 공백 / 탭 전부 처리
+    const parts = line.trim().split(/[,\s]+/);
+
+    const carrier = parts[0];
+    const no = parts[1];
+
+    if (!carrier || !no) return;
+
     const status = getStatus(no.trim());
+
     result += `${carrier} / ${no} / ${status}\n`;
   });
 
